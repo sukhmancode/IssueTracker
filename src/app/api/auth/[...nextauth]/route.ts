@@ -1,4 +1,4 @@
-import NextAuth, { AuthOptions, Session, User, Account, Profile } from "next-auth";
+import NextAuth, { NextAuthOptions, Session, User, Account, Profile } from "next-auth";
 import GithubProvider from "next-auth/providers/github";
 import { PrismaClient } from "@prisma/client";
 import { JWT } from "next-auth/jwt";
@@ -26,7 +26,7 @@ interface SignInParams {
     credentials?: Record<string, any>;
 }
 
-export const authOptions: AuthOptions = {
+export const authOptions: NextAuthOptions = {
     providers: [
         GithubProvider({
             clientId: process.env.GITHUB_CLIENT_ID ?? "",
