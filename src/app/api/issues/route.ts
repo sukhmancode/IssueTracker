@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "../auth/[...nextauth]/route"; // Adjust path based on your structure
+import { authOptions } from "@/app/lib/auth"
 
 const prisma = new PrismaClient();
 
