@@ -3,7 +3,6 @@ import GithubProvider from "next-auth/providers/github";
 import { PrismaClient } from "@prisma/client";
 import { JWT } from "next-auth/jwt";
 
-// Extend the built-in session type to include user id
 declare module "next-auth" {
     interface Session {
         user: {
