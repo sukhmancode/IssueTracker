@@ -1,6 +1,18 @@
-import NextAuth from "next-auth";
+import NextAuth, { Session } from "next-auth";
 import GithubProvider from "next-auth/providers/github";
 import { PrismaClient } from "@prisma/client";
+
+
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+    };
+  }
+}
 
 const prisma = new PrismaClient();
 
@@ -34,9 +46,8 @@ export const authOptions = {
             }
             return true;
         },
-        //@ts-ignore
-        async session({ session, token }) {
-            if (token && token.sub) {
+        async session({ session, token }:{session:Session;token:any}) {
+            if (token && token.sub && session.user) {
                 session.user.id = token.sub;
             }
             console.log("Session callback:", session);
