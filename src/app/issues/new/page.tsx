@@ -22,7 +22,7 @@ const NewIssue = () => {
     const [userId, setUserId] = useState<string | null>(null); // Store userId here
     const router = useRouter();
 
-    // Fetch userId from your session or API on component mount
+ 
     useEffect(() => {
         const fetchUserId = async () => {
             try {
