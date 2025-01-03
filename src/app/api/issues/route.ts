@@ -7,9 +7,9 @@ import { authOptions } from "../auth/[...nextauth]/route"; // Adjust path based 
 const prisma = new PrismaClient();
 
 const createIssueSchema = z.object({
-  title: z.string().min(1).max(255),      
-  description: z.string().min(10),         
-  userId: z.string(),                      
+  title: z.string().min(1).max(255),
+  description: z.string().min(10),
+
 });
 
 export async function POST(req: NextRequest) {
@@ -30,10 +30,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
   
-    const email = session.user.email;  
+    const email = session.user.email;  // Get email from session (assuming email is available)
     console.log("User email from session:", email);
   
-    
+    // Validate only the title and description
     const validation = createIssueSchema.safeParse(body);
   
     if (!validation.success) {
@@ -73,4 +73,23 @@ export async function POST(req: NextRequest) {
       console.error("Error creating issue:", error);
       return NextResponse.json({ error: "Failed to create issue" }, { status: 500 });
     }
+  }
+  
+  
+export async function GET() {
+  try {
+    const issues = await prisma.issue.findMany({
+      include: {
+        user: true,
+      },
+    });
+    return NextResponse.json({
+      issues,
+    }, { status: 200 });
+  } catch (error) {
+    console.error("Error fetching issues:", error);
+    return NextResponse.json({
+      error: "Failed to fetch issues",
+    }, { status: 500 });
+  }
 }

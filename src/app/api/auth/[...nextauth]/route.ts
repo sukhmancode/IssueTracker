@@ -1,71 +1,73 @@
-import NextAuth, { NextAuthOptions, Session, Account, Profile, User } from "next-auth";
+import NextAuth, { AuthOptions, Session, User, Account, Profile } from "next-auth";
 import GithubProvider from "next-auth/providers/github";
 import { PrismaClient } from "@prisma/client";
+import { JWT } from "next-auth/jwt";
+
+// Extend the built-in session type to include user id
+declare module "next-auth" {
+    interface Session {
+        user: {
+            id: string;
+            name: string ;
+            email: string ;
+            image: string ;
+        }
+    }
+}
 
 const prisma = new PrismaClient();
 
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string; // Add id here
-      name?: string | null;
-      email?: string ;
-      image?: string | null;
+interface SignInParams {
+    user: User;
+    account: Account | null;
+    profile?: Profile;
+    email?: {
+        verificationRequest?: boolean;
     };
-  }
-
-  interface User {
-    id: string; // Add id here
-    name?: string | null;
-    email?: string | null;
-    image?: string | null;
-  }
+    credentials?: Record<string, any>;
 }
 
-
-export const authOptions: NextAuthOptions = {
-  providers: [
-    GithubProvider({
-      clientId: process.env.GITHUB_CLIENT_ID ?? "",
-      clientSecret: process.env.GITHUB_CLIENT_SECRET ?? "",
-    }),
-  ],
-  secret: process.env.NEXTAUTH_SECRET ?? "secret",
-  callbacks: {
-    async signIn(params: { user: User; account: Account | null; profile?: Profile }) {
-      console.log("Sign-in params:", params);
-
-      if (!params.user || !params.user.email) {
-        return false;
-      }
-      try {
-        await prisma.user.upsert({
-          where: { email: params.user.email },
-          update: {},
-          create: {
-            email: params.user.email || "unknown@email",
-            provider: "Github",
-            username: params.user.name || "Anonymous",
-          },
-        });
-      } catch (e) {
-        console.error("Error during sign-in:", e);
-        return false;
-      }
-      return true;
+export const authOptions: AuthOptions = {
+    providers: [
+        GithubProvider({
+            clientId: process.env.GITHUB_CLIENT_ID ?? "",
+            clientSecret: process.env.GITHUB_CLIENT_SECRET ?? "",
+        }),
+    ],
+    secret: process.env.NEXTAUTH_SECRET ?? "secret",
+    callbacks: {
+        async signIn({ user, account, profile }: SignInParams) {
+            console.log("Sign-in params:", { user, account, profile });
+            if (!user || !user.email) {
+                return false;
+            }
+            try {
+                await prisma.user.upsert({
+                    where: { email: user.email },
+                    update: {},
+                    create: {
+                        email: user.email || "unknown@email",
+                        provider: "Github",
+                        username: user.name || "Anonymous",
+                    },
+                });
+            } catch (e) {
+                console.error("Error during sign-in:", e);
+                return false;
+            }
+            return true;
+        },
+        async session({ session, token }: { session: Session; token: JWT }) {
+            if (token && token.sub) {
+                session.user.id = token.sub;
+            }
+            console.log("Session callback:", session);
+            console.log(token);
+            
+            return session;
+        },
     },
-    async session({ session, token }: { session: Session; token: any }) {
-      if (token && token.sub && session.user) {
-        session.user.id = token.sub;
-      }
-      console.log("Session callback:", session);
-      console.log(token);
-
-      return session;
-    },
-  },
 };
 
-// Export named handlers for each HTTP method
 export const GET = NextAuth(authOptions);
 export const POST = NextAuth(authOptions);
