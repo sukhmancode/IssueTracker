@@ -18,6 +18,7 @@ const Navbar = () => {
     ]
   return (
     <nav className='flex justify-between border-b mb-5 items-center p-10 h-14'>
+     
         <Link href={"/"}><AiFillBug size={40}/></Link>
         <ul className={`flex space-x-5`}>
             {Links.map((link,idx) => (
@@ -26,7 +27,11 @@ const Navbar = () => {
         </ul>
       <div>
         {session.data?.user ?   (
-            <Button onClick={() => signOut()}>Log Out</Button>
+            <div className='flex gap-3 items-center flex-row-reverse'>
+              <img src={session.data.user.image} alt="" className='rounded-full' width={50} height={20}/>
+           <Button onClick={() => signOut()}>Log Out</Button>
+            </div>
+     
         ) : (
             <Button onClick={() => signIn()}>signIn</Button>
         )}
